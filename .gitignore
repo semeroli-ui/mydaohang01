@@ -32,7 +32,7 @@ dist-ssr
 .dev.vars*
 pnpm-lock.yaml
 npm-lock.yaml
-wrangler.jsonc
+# wrangler.jsonc 必须进版本库：Cloudflare 的 Git 构建靠它定位 Worker 入口与静态资源目录
 开发调试.md
 UPDATE.md
 NEXT.md

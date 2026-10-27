@@ -1,0 +1,26 @@
+{
+  // 生产部署配置。必须纳入版本库，否则 Cloudflare 的 Git 构建读不到
+  // 「Worker 入口在哪、静态资源在哪」，结果就是页面正常但 /api/* 全部 404。
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mydaohang01",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-01-01",
+
+  // 不覆盖 Dashboard 上已配置的变量（AUTH_ENABLED / AUTH_REQUIRED_FOR_READ /
+  // AUTH_USERNAME / AUTH_PASSWORD 等都在那边维护，避免每次部署被清空）
+  "keep_vars": true,
+
+  "assets": {
+    "directory": "./dist/client",
+    "binding": "ASSETS"
+  },
+
+  // D1 绑定。database_name 故意不写：schema 里只有 binding 必填，
+  // 用 database_id 定位即可，避免库名和线上不一致时部署报错。
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "88156a6f-061c-4a98-a1fe-18d3a8431c55"
+    }
+  ]
+}
