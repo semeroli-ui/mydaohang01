@@ -220,8 +220,9 @@ const SearchBox: React.FC<SearchBoxProps> = ({ groups, sites, onInternalResultCl
   return (
     // 轴线：以前这里是 maxWidth 800 + mx auto，整根搜索框居中浮在 399px 处，
     // 和标题(153)、分组容器(153)各在一条线上，全页共四根竖轴。
-    // 现在拉满内容宽度，左边缘与标题、卡片完全同轴，右边缘也齐。
-    <Box ref={searchBoxRef} sx={{ position: 'relative', width: '100%' }}>
+    // 现在去掉 mx auto（左边缘对齐轴线），但保留限宽 —— 满内容宽度时它是一根
+    // 横贯全页的长杆，右侧放大镜离输入文字太远，读起来不像搜索框。
+    <Box ref={searchBoxRef} sx={{ position: 'relative', width: '100%', maxWidth: 720 }}>
       <Paper
         elevation={0}
         sx={{
