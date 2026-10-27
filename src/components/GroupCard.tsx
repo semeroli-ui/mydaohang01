@@ -17,7 +17,7 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  horizontalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable';
 // 引入Material UI组件
 import {
@@ -39,9 +39,15 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { alpha } from '@mui/material/styles';
 import { RADIUS } from '../theme';
 
-// 卡片列宽：编辑态与只读态共用同一套。此前两处分别写死（md 一个 25%、一个 33.33%），
-// 导致点一下「编辑」整页重排、用户正在看的卡片会跳位。
-const CARD_WIDTH = { xs: '100%', sm: '50%', md: '33.33%', lg: '25%', xl: '20%' } as const;
+// 卡片网格：编辑态与只读态共用这一份定义。
+// 原来是 flex-wrap + 百分比列宽，两处各写一套（md 一个 25%、一个 33.33%），
+// 且列数被断点锁死 —— 1440px 下固定 4 列、右边空一大片。
+// 换成 auto-fill 之后列数由可用宽度自己算：卡片最窄 190px，铺满为止，永不跳空。
+const CARD_GRID = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+  gap: 2, // 16px，与分组内边距同一倍数
+} as const;
 
 // 更新组件属性接口
 interface GroupCardProps {
@@ -167,83 +173,45 @@ const GroupCard: React.FC<GroupCardProps> = ({
   const renderSites = () => {
     // 使用本地状态中的站点数据
     const sitesToRender = isCurrentEditingGroup ? sites : group.sites;
+    const isSortable = isCurrentEditingGroup;
 
-    // 如果是编辑模式，使用DndContext包装
-    if (isCurrentEditingGroup) {
-      return (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleSiteDragEnd}
-        >
-          <SortableContext
-            items={sitesToRender.map((site) => `site-${site.id}`)}
-            strategy={horizontalListSortingStrategy}
-          >
-            <Box sx={{ width: '100%' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  margin: -1, // 抵消内部padding，确保边缘对齐
-                }}
-              >
-                {sitesToRender.map((site, idx) => (
-                  <Box
-                    key={site.id || idx}
-                    sx={{
-                      width: CARD_WIDTH,
-                      padding: 1, // 内部间距，更均匀的分布
-                      boxSizing: 'border-box', // 确保padding不影响宽度计算
-                    }}
-                  >
-                    <SiteCard
-                      site={site}
-                      onUpdate={onUpdate}
-                      onDelete={onDelete}
-                      isEditMode={true}
-                      viewMode={viewMode}
-                      index={idx}
-                      iconApi={configs?.['site.iconApi']} // 传入iconApi配置
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          </SortableContext>
-        </DndContext>
-      );
-    }
-
-    // 普通模式下的渲染
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          margin: -1, // 抵消内部padding，确保边缘对齐
-        }}
-      >
-        {sitesToRender.map((site) => (
-          <Box
-            key={site.id}
-            sx={{
-              width: CARD_WIDTH,
-              padding: 1, // 内部间距，更均匀的分布
-              boxSizing: 'border-box', // 确保padding不影响宽度计算
-            }}
-          >
-            <SiteCard
-              site={site}
-              onUpdate={onUpdate}
-              onDelete={onDelete}
-              isEditMode={false}
-              viewMode={viewMode}
-              iconApi={configs?.['site.iconApi']} // 传入iconApi配置
-            />
-          </Box>
+    // 只读态与编辑态渲染的是同一套网格，唯一差别是外层包不包拖拽上下文、
+    // 以及传给 SiteCard 的 isEditMode。这样点「排序」卡片既不重排也不跳位。
+    const grid = (
+      <Box sx={CARD_GRID}>
+        {sitesToRender.map((site, idx) => (
+          <SiteCard
+            key={site.id || idx}
+            site={site}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            isEditMode={isSortable}
+            viewMode={viewMode}
+            index={idx}
+            iconApi={configs?.['site.iconApi']} // 传入iconApi配置
+          />
         ))}
       </Box>
+    );
+
+    if (!isSortable) {
+      return grid;
+    }
+
+    return (
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleSiteDragEnd}
+      >
+        <SortableContext
+          items={sitesToRender.map((site) => `site-${site.id}`)}
+          // 卡片已经换行成多行网格，horizontal 策略只认第一行；rect 策略按矩形位置找落点
+          strategy={rectSortingStrategy}
+        >
+          {grid}
+        </SortableContext>
+      </DndContext>
     );
   };
 
@@ -286,7 +254,9 @@ const GroupCard: React.FC<GroupCardProps> = ({
       sx={{
         borderRadius: RADIUS.surface,
         p: { xs: 2, sm: 3 },
-        transition: 'all 0.3s ease-in-out',
+        // 只过渡真正会变的两个属性。原来写 transition: all，连 transform 一起过渡，
+        // hover 时整块分组会放大 1%、把邻居推开 —— 鼠标划过一排分组页面像在呼吸。
+        transition: 'box-shadow 240ms ease-out, border-color 240ms ease-out',
         border: '1px solid transparent',
         // 1 / 5 是主题的三档阴影索引：静止 / 抬一级（见 src/theme.ts）
         boxShadow: sortMode === 'None' ? 1 : 5,
@@ -296,7 +266,6 @@ const GroupCard: React.FC<GroupCardProps> = ({
         '&:hover': {
           boxShadow: 5,
           borderColor: 'divider',
-          transform: sortMode === 'None' ? 'scale(1.01)' : 'none',
         },
         backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.95),
         backdropFilter: 'blur(5px)',
@@ -314,8 +283,10 @@ const GroupCard: React.FC<GroupCardProps> = ({
           sx={{
             display: 'flex',
             alignItems: 'center',
-            // 24px 图标按钮 + 4px 间距 = 28px，左移等量让标题文字与下方卡片左边缘落在同一条竖线上
-            ml: '-28px',
+            // 24px 图标按钮 + 4px 间距 = 28px，左移等量让标题文字与下方卡片左边缘落在同一条竖线上。
+            // 但分组内边距在手机上只有 16px，减 28px 会把箭头推到卡片边框上（贴着边线，像脏点），
+            // 所以窄屏放弃这根对齐线、让箭头待在留白里，标题自然缩进 28px —— 这是折叠面板的常规样子。
+            ml: { xs: 0, sm: '-28px' },
             gap: 0.5,
             cursor: 'pointer',
             '&:hover': {

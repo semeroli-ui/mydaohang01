@@ -56,6 +56,10 @@ const SiteCard = memo(function SiteCard({
     zIndex: isDragging ? 9999 : 'auto',
     opacity: isDragging ? 0.8 : 1,
     position: 'relative' as const,
+    // 这一层是网格里的一格（排序模式下由 dnd-kit 包一层 div）。
+    // 给它 height:100% 才能让内部卡片的 height:100% 解析到整行高度，
+    // 否则同一行里描述行数不同的卡片会高低不齐。
+    height: '100%',
   };
 
   // 如果没有图标，使用首字母作为图标
@@ -92,16 +96,12 @@ const SiteCard = memo(function SiteCard({
 
   // 卡片内容
   const cardContent = (
+    // 去掉 hover 的 translateY(-4px)：卡片是网格里的一格，位置由网格决定。
+    // 整格上浮会盖住上一行的描边、并让相邻卡片看起来错行；改由阴影变化表达悬停。
     <Box
       sx={{
         height: '100%',
         position: 'relative',
-        transition: 'transform 0.3s ease-in-out',
-        ...(!isEditMode && {
-          '&:hover': {
-            transform: 'translateY(-4px)',
-          },
-        }),
       }}
     >
       <Card

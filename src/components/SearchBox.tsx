@@ -218,15 +218,36 @@ const SearchBox: React.FC<SearchBoxProps> = ({ groups, sites, onInternalResultCl
   }, []);
 
   return (
-    <Box ref={searchBoxRef} sx={{ position: 'relative', width: '100%', maxWidth: 800, mx: 'auto' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        {/* 搜索模式切换 - 移到外侧 */}
+    // 轴线：以前这里是 maxWidth 800 + mx auto，整根搜索框居中浮在 399px 处，
+    // 和标题(153)、分组容器(153)各在一条线上，全页共四根竖轴。
+    // 现在拉满内容宽度，左边缘与标题、卡片完全同轴，右边缘也齐。
+    <Box ref={searchBoxRef} sx={{ position: 'relative', width: '100%' }}>
+      <Paper
+        elevation={0}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          p: 0.5,
+          borderRadius: RADIUS.card,
+          boxShadow: 1,
+          // 卡片有 1px 描边，搜索框却没有 —— 深色模式下一片黑，看不出这是个输入框
+          border: '1px solid',
+          borderColor: 'divider',
+          transition: 'box-shadow 200ms ease-out, border-color 200ms ease-out',
+          '&:focus-within': {
+            // 焦点环用主题主色，同时把阴影抬一级（5 = 悬停档）
+            boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}, ${theme.shadows[5]}`,
+          },
+        }}
+      >
+        {/* 搜索模式切换 —— 收进输入框内部，做成输入框的前缀，
+            这样它的左边缘就是输入框的左边缘，不再单独占一段水平空间 */}
         <ToggleButtonGroup
           value={mode}
           exclusive
           onChange={handleModeChange}
           size='small'
-          sx={{ flexShrink: 0 }}
+          sx={{ flexShrink: 0, ml: 0.5 }}
         >
           <ToggleButton value='internal' aria-label='站内搜索'>
             <Tooltip title='站内搜索'>
@@ -240,115 +261,92 @@ const SearchBox: React.FC<SearchBoxProps> = ({ groups, sites, onInternalResultCl
           </ToggleButton>
         </ToggleButtonGroup>
 
-        <Paper
-          elevation={0}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            p: 0.5,
-            borderRadius: RADIUS.card,
-            boxShadow: 1,
-            // 卡片有 1px 描边，搜索框却没有 —— 深色模式下一片黑，看不出这是个输入框
-            border: '1px solid',
-            borderColor: 'divider',
-            transition: 'all 0.3s',
-            flex: 1,
-            '&:focus-within': {
-              // 焦点环用主题主色，同时把阴影抬一级（5 = 悬停档）
-              boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}, ${theme.shadows[5]}`,
-            },
-          }}
-        >
-          {/* 搜索引擎选择器（仅站外模式） */}
-          {mode === 'external' && (
-            <>
-              <Tooltip title={`当前: ${selectedEngine.name}`}>
-                <IconButton size='small' onClick={handleEngineMenuOpen} sx={{ p: 0.5, ml: 0.5 }}>
-                  {selectedEngine.icon ? (
-                    <Avatar
-                      src={selectedEngine.icon}
-                      sx={{ width: 24, height: 24 }}
-                      alt={selectedEngine.name}
-                    />
-                  ) : (
-                    <SearchIcon fontSize='small' />
-                  )}
-                  <ExpandMoreIcon fontSize='small' />
-                </IconButton>
-              </Tooltip>
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleEngineMenuClose}>
-                {SEARCH_ENGINES.map((engine) => (
-                  <MenuItem
-                    key={engine.key}
-                    onClick={() => handleEngineSelect(engine)}
-                    selected={engine.key === selectedEngine.key}
-                  >
-                    <ListItemIcon>
-                      {engine.icon ? (
-                        <Avatar
-                          src={engine.icon}
-                          sx={{ width: 24, height: 24 }}
-                          alt={engine.name}
-                        />
-                      ) : (
-                        <SearchIcon fontSize='small' />
-                      )}
-                    </ListItemIcon>
-                    <ListItemText>{engine.name}</ListItemText>
-                    {engine.key === selectedEngine.key && (
-                      <CheckIcon fontSize='small' color='primary' />
+        <Divider orientation='vertical' flexItem sx={{ mx: 0.75, my: 1 }} />
+
+        {mode === 'external' && (
+          <>
+            <Tooltip title={`当前: ${selectedEngine.name}`}>
+              <IconButton size='small' onClick={handleEngineMenuOpen} sx={{ p: 0.5 }}>
+                {selectedEngine.icon ? (
+                  <Avatar
+                    src={selectedEngine.icon}
+                    sx={{ width: 24, height: 24 }}
+                    alt={selectedEngine.name}
+                  />
+                ) : (
+                  <SearchIcon fontSize='small' />
+                )}
+                <ExpandMoreIcon fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleEngineMenuClose}>
+              {SEARCH_ENGINES.map((engine) => (
+                <MenuItem
+                  key={engine.key}
+                  onClick={() => handleEngineSelect(engine)}
+                  selected={engine.key === selectedEngine.key}
+                >
+                  <ListItemIcon>
+                    {engine.icon ? (
+                      <Avatar src={engine.icon} sx={{ width: 24, height: 24 }} alt={engine.name} />
+                    ) : (
+                      <SearchIcon fontSize='small' />
                     )}
-                  </MenuItem>
-                ))}
-              </Menu>
-              <Divider orientation='vertical' flexItem sx={{ mx: 1 }} />
-            </>
-          )}
+                  </ListItemIcon>
+                  <ListItemText>{engine.name}</ListItemText>
+                  {engine.key === selectedEngine.key && (
+                    <CheckIcon fontSize='small' color='primary' />
+                  )}
+                </MenuItem>
+              ))}
+            </Menu>
+            <Divider orientation='vertical' flexItem sx={{ mx: 1 }} />
+          </>
+        )}
 
-          {/* 搜索输入框 */}
-          <InputBase
-            ref={inputRef}
-            placeholder={
-              mode === 'internal'
-                ? '搜索站点、分组...'
-                : `使用 ${selectedEngine.name} 搜索或输入网址...`
-            }
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            sx={{ ml: 1, flex: 1 }}
-            inputProps={{ 'aria-label': '搜索' }}
-            autoComplete='off'
-          />
+        {/* 搜索输入框 */}
+        <InputBase
+          ref={inputRef}
+          placeholder={
+            mode === 'internal'
+              ? '搜索站点、分组...'
+              : `使用 ${selectedEngine.name} 搜索或输入网址...`
+          }
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          sx={{ ml: 1, flex: 1 }}
+          inputProps={{ 'aria-label': '搜索' }}
+          autoComplete='off'
+        />
 
-          {/* 模式标签 */}
-          {query && (
-            <Chip
-              label={mode === 'internal' ? '站内' : '站外'}
-              size='small'
-              color={mode === 'internal' ? 'secondary' : 'primary'}
-              sx={{ mr: 1 }}
-            />
-          )}
-
-          {/* 清空按钮 */}
-          {query && (
-            <IconButton size='small' onClick={handleClear} sx={{ mr: 0.5 }}>
-              <CloseIcon fontSize='small' />
-            </IconButton>
-          )}
-
-          {/* 搜索按钮 */}
-          <IconButton
+        {/* 模式标签 */}
+        {query && (
+          <Chip
+            label={mode === 'internal' ? '站内' : '站外'}
             size='small'
-            onClick={mode === 'external' ? handleExternalSearch : undefined}
-            disabled={!query.trim()}
-            sx={{ mr: 0.5 }}
-          >
-            <SearchIcon />
+            color={mode === 'internal' ? 'secondary' : 'primary'}
+            sx={{ mr: 1 }}
+          />
+        )}
+
+        {/* 清空按钮 */}
+        {query && (
+          <IconButton size='small' onClick={handleClear} sx={{ mr: 0.5 }}>
+            <CloseIcon fontSize='small' />
           </IconButton>
-        </Paper>
-      </Box>
+        )}
+
+        {/* 搜索按钮 */}
+        <IconButton
+          size='small'
+          onClick={mode === 'external' ? handleExternalSearch : undefined}
+          disabled={!query.trim()}
+          sx={{ mr: 0.5 }}
+        >
+          <SearchIcon />
+        </IconButton>
+      </Paper>
 
       {/* 站内搜索结果面板 */}
       {mode === 'internal' && (

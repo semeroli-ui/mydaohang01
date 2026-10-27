@@ -963,7 +963,9 @@ function App() {
         )}
 
         <Container
-          maxWidth='lg'
+          // 从 lg(1200) 放到 xl(1536)：1440 屏上原来两侧各空 152px，
+          // 宽屏下更是近一半空着。配合卡片的 auto-fill 网格，宽屏会自动多排一列。
+          maxWidth='xl'
           sx={{
             py: 4,
             px: { xs: 2, sm: 3, md: 4 },
