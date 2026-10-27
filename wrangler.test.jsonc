@@ -1,18 +1,24 @@
 {
   "name": "navihive-test",
   "compatibility_date": "2025-01-01",
-  "main": "dist/navihive/index.js",
+  // 入口指向源码：旧值 dist/navihive/index.js 是旧版 vite 插件的产物路径，
+  // 新版插件输出到 dist/<worker名>/index.js，那个路径已不存在
+  "main": "worker/index.ts",
   "assets": {
     "directory": "dist/client",
     "binding": "ASSETS"
   },
   "vars": {
-    // 认证配置
+    // 认证开关与用户名不是敏感值，保留在这里
     "AUTH_ENABLED": "true",
     "AUTH_REQUIRED_FOR_READ": "false",
-    "AUTH_USERNAME": "admin",
-    "AUTH_PASSWORD": "$2a$10$Ad1Vu8l8RNdrMn5RPj0pjeLQHh3sTd.OyqjNKFrWTNT/cj1DzkwAi",
-    "AUTH_SECRET": "navihive-test-secret-2025"
+    "AUTH_USERNAME": "admin"
+
+    // AUTH_PASSWORD / AUTH_SECRET 故意不出现在仓库里：
+    //   本地开发 → 写进 .dev.vars（已被 .gitignore 排除，wrangler 会自动读取并覆盖）
+    //   线上部署 → wrangler secret put AUTH_PASSWORD / AUTH_SECRET，或在 Cloudflare Dashboard 配置
+    // 生成密码哈希：pnpm hash-password <你的密码>
+    // 生成随机密钥：node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
   },
   "d1_databases": [
     {
