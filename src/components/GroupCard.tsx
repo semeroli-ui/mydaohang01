@@ -30,6 +30,7 @@ import {
   Snackbar,
   Alert,
   Collapse,
+  useMediaQuery,
 } from '@mui/material';
 import SortIcon from '@mui/icons-material/Sort';
 import SaveIcon from '@mui/icons-material/Save';
@@ -37,7 +38,29 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { alpha } from '@mui/material/styles';
-import { RADIUS } from '../theme';
+import { RADIUS, FONT_SIZE } from '../theme';
+
+/**
+ * 把「主名（说明）」拆成两段。
+ *
+ * 起因：手机上 24 个分组里有 15 个标题要换 2~3 行，最长的那个吃掉 89px，
+ * 而括号里那串其实是「这个组里有什么」的说明，不是分组的身份 ——
+ * 两者字号一样时，标题读起来像一段正文。
+ *
+ * 拆开之后手机端的层级是：主名（22px/600，一行）→ 说明（13px/次级色，最多两行）
+ * → 数量（常显，不参与截断）。桌面上所有组名本来都是一行，保持原样不动。
+ *
+ * 拿不到括号就整串当主名原样返回，不做任何猜测；
+ * 括号里是空的、或者主名是空的（比如组名就叫「（备注）」）也原样返回。
+ */
+function splitGroupName(name: string): { main: string; note: string } {
+  const m = name.match(/^(.+?)[（(](.+)[）)]\s*$/);
+  if (!m || !m[1]?.trim() || !m[2]?.trim()) return { main: name, note: '' };
+  return { main: m[1].trim(), note: m[2].trim() };
+}
+
+// 与 App.css 里的移动端断点（max-width: 600px）对齐
+const MOBILE_QUERY = '(max-width: 599.95px)';
 
 // 卡片网格：编辑态与只读态共用这一份定义。
 // 原来是 flex-wrap + 百分比列宽，两处各写一套（md 一个 25%、一个 33.33%），
@@ -96,6 +119,10 @@ const GroupCard: React.FC<GroupCardProps> = ({
     const savedState = localStorage.getItem(`group-${group.id}-collapsed`);
     return savedState ? JSON.parse(savedState) : false;
   });
+
+  // 手机上把「主名 / 说明」拆成两级；桌面保持原来的一行
+  const isMobile = useMediaQuery(MOBILE_QUERY);
+  const { main: groupMainName, note: groupNote } = splitGroupName(group.name);
 
   // 保存折叠状态到本地存储
   useEffect(() => {
@@ -286,7 +313,9 @@ const GroupCard: React.FC<GroupCardProps> = ({
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'center',
+            // 手机端标题变成「主名 + 说明」两行，箭头要对齐到主名那一行，
+            // 而不是在两行之间的中线上悬浮（那会让人以为它属于说明那一行）。
+            alignItems: { xs: 'flex-start', sm: 'center' },
             // 24px 图标按钮 + 4px 间距 = 28px，左移等量让标题文字与下方卡片左边缘落在同一条竖线上。
             // 但分组内边距在手机上只有 16px，减 28px 会把箭头推到卡片边框上（贴着边线，像脏点），
             // 所以窄屏放弃这根对齐线、让箭头待在留白里，标题自然缩进 28px —— 这是折叠面板的常规样子。
@@ -306,7 +335,13 @@ const GroupCard: React.FC<GroupCardProps> = ({
             className='collapse-icon'
             aria-label={isCollapsed ? `展开 ${group.name}` : `收起 ${group.name}`}
             aria-expanded={!isCollapsed}
-            sx={{ width: 24, height: 24, p: 0 }}
+            sx={{
+              width: 24,
+              height: 24,
+              p: 0,
+              // 主名行高 29.7px、图标 24px，补 3px 让箭头视觉上落在那一行的中线上
+              mt: { xs: '3px', sm: 0 },
+            }}
           >
             {/* 按「方向」表达状态，而不是上下翻转：
                 收起时朝右「›」＝可以展开；展开时转 90° 朝下「⌄」＝内容在下方。
@@ -319,17 +354,70 @@ const GroupCard: React.FC<GroupCardProps> = ({
               }}
             />
           </IconButton>
-          <Typography
-            variant='h5'
-            component='h2'
-            color='text.primary'
-            sx={{ mb: { xs: 1, sm: 0 } }}
+          <Box
+            sx={{
+              // 让标题文字可以收缩：不加 minWidth:0 的话，flex 子项的最小尺寸是内容宽度，
+              // 省略号永远不会出现，标题会把右边的按钮挤出容器。
+              minWidth: 0,
+              mb: { xs: 1, sm: 0 },
+            }}
           >
-            {group.name}
-            <Typography component='span' variant='body2' color='text.secondary' sx={{ ml: 1 }}>
-              ({group.sites.length})
-            </Typography>
-          </Typography>
+            {isMobile ? (
+              <>
+                <Typography
+                  variant='h5'
+                  component='h2'
+                  color='text.primary'
+                  sx={{ display: 'flex', alignItems: 'baseline', minWidth: 0 }}
+                >
+                  {/* 主名一行，超出省略。省略的是"这些字没显示"，不是"这个组不存在"，
+                      所以后面紧跟着的说明和数量必须常显。 */}
+                  <Box
+                    component='span'
+                    sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
+                    {groupMainName}
+                  </Box>
+                  <Box
+                    component='span'
+                    color='text.secondary'
+                    sx={{ ml: 1, flexShrink: 0, fontSize: FONT_SIZE.caption, fontWeight: 400 }}
+                  >
+                    ({group.sites.length})
+                  </Box>
+                </Typography>
+
+                {/* 说明降为次级文字：13px + 次级色，最多两行。
+                    它回答的是"这个组里有什么"，扫一眼就够，不需要和标题同一个字号。
+                    上限给 2 行而不是 1 行：实测 24 个组的说明里只有最长的那一个
+                    （29 字）在 390px 下会溢出，放成 2 行它正好排完，其余 23 个仍是一行 ——
+                    总高度只多 21px，却做到一个字都不截。 */}
+                {groupNote && (
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    title={groupNote}
+                    sx={{
+                      mt: 0.25,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {groupNote}
+                  </Typography>
+                )}
+              </>
+            ) : (
+              <Typography variant='h5' component='h2' color='text.primary'>
+                {group.name}
+                <Typography component='span' variant='body2' color='text.secondary' sx={{ ml: 1 }}>
+                  ({group.sites.length})
+                </Typography>
+              </Typography>
+            )}
+          </Box>
         </Box>
 
         <Box
