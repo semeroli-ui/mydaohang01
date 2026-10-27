@@ -42,10 +42,14 @@ import { RADIUS } from '../theme';
 // 卡片网格：编辑态与只读态共用这一份定义。
 // 原来是 flex-wrap + 百分比列宽，两处各写一套（md 一个 25%、一个 33.33%），
 // 且列数被断点锁死 —— 1440px 下固定 4 列、右边空一大片。
-// 换成 auto-fill 之后列数由可用宽度自己算：卡片最窄 190px，铺满为止，永不跳空。
+// 换成 auto-fill 之后列数由可用宽度自己算，铺满为止，永不跳空。
+//
+// 最小宽度 220 而不是 190：拿线上 204 张真实卡片量过，
+// 190/200 在 1440 下排 6 列、卡宽 208，有 23 个站名被省略号截断；
+// 210~240 排 5 列、卡宽 252，截断降到 5 个；260 退回 4 列只剩 1 个但开始浪费宽度。
 const CARD_GRID = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
   gap: 2, // 16px，与分组内边距同一倍数
 } as const;
 

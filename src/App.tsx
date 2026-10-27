@@ -874,6 +874,12 @@ function App() {
     }
   };
 
+  // 是否设了背景图（决定标题要不要改成白字 + 压暗层是否渲染）
+  // 注意 noUncheckedIndexedAccess 下 configs['x'] 是 string | undefined，
+  // 必须先用 ?? '' 收成 string 再交给 isSecureUrl，否则 tsc -b 会挂在 TS2345。
+  const backgroundImage = configs['site.backgroundImage'] ?? '';
+  const hasBackgroundImage = backgroundImage !== '' && isSecureUrl(backgroundImage);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -928,7 +934,7 @@ function App() {
         }}
       >
         {/* 背景图片 */}
-        {configs['site.backgroundImage'] && isSecureUrl(configs['site.backgroundImage']) && (
+        {hasBackgroundImage && (
           <>
             <Box
               sx={{
@@ -937,7 +943,7 @@ function App() {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundImage: `url(${configs['site.backgroundImage']})`,
+                backgroundImage: `url(${backgroundImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -956,6 +962,23 @@ function App() {
                         (1 - Number(configs['site.backgroundOpacity'])) +
                         ')',
                   zIndex: 1,
+                },
+                // 顶部压暗层（渐变遮罩）。
+                // 起因：backgroundOpacity 是「照片可见度」，用户设 0.99 时蒙版只剩 1%，
+                // 标题的深灰字直接压在照片上，实测对比度接近 1:1，等于看不见。
+                // 这里不靠用户调参数，而是在页面顶部固定压一层由深到透的渐变，
+                // 无论照片本身是亮是暗，标题/按钮/搜索框所在的那一段都有足够的底衬。
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 460,
+                  pointerEvents: 'none',
+                  zIndex: 2,
+                  background:
+                    'linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.46) 42%, rgba(0,0,0,0.20) 72%, rgba(0,0,0,0) 100%)',
                 },
               }}
             />
@@ -987,11 +1010,14 @@ function App() {
               variant='h3'
               component='h1'
               fontWeight='bold'
-              color='text.primary'
+              // 有背景图时改白字（配合上方的渐变遮罩），否则用主题的正文色
+              color={hasBackgroundImage ? 'common.white' : 'text.primary'}
               sx={{
                 // 字号来自主题的标题刻度（32px），窄屏逐级降档
                 fontSize: { xs: 26, sm: 28, md: FONT_SIZE.title },
                 textAlign: { xs: 'center', sm: 'left' },
+                // 照片上再补一层极轻的投影，防止照片某个明亮区域正好落在字上
+                textShadow: hasBackgroundImage ? '0 2px 14px rgba(0, 0, 0, 0.55)' : 'none',
               }}
             >
               {configs['site.name']}

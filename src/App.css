@@ -49,11 +49,12 @@
     overflow-x: hidden;
   }
 
-  /* 改善触摸体验的样式 */
-  button,
-  [role='button'],
-  a {
-    padding: 6px 12px !important;
+  /* 触摸目标：只给文字按钮补一个最小高度。
+     原来写的是 `button, [role='button'], a { padding: 6px 12px !important; min-height: 36px }`，
+     通配命中页面上所有按钮 —— 搜索框里的模式切换因此变成 46×36（桌面 36×36），
+     把整根搜索框从 46px 撑到 52px；卡片里的图标按钮也被横向撑开。
+     放大触摸目标是对的，但不能用无差别的 padding !important 来实现。 */
+  .MuiButton-root {
     min-height: 36px;
   }
 
@@ -63,13 +64,8 @@
     font-size: 18px !important;
   }
 
-  /* 图标按钮样式调整 */
-  .MuiIconButton-root {
-    padding: 6px !important;
-  }
-
-  /* 移动端更清晰的分割线 */
-  .MuiDivider-root {
+  /* 分割线只给横向的加外边距 —— 竖向分割线（搜索框里那根）被加 8px 会缩短 */
+  .MuiDivider-root:not(.MuiDivider-vertical) {
     margin: 8px 0 !important;
   }
 
@@ -83,8 +79,11 @@
     min-width: 200px !important;
   }
 
-  /* 移动端表单元素更容易点击 */
-  .MuiInputBase-input {
+  /* 移动端表单元素更容易点击 —— 但只针对「弹窗里的表单」。
+     这条原来是无差别命中所有 .MuiInputBase-input：搜索框那根 InputBase 也被撑到
+     41.6px（桌面 30.6px），把 46px 的搜索框顶成 52px，工具栏跟着变高。
+     弹窗里的设置表单（站点/分组/配置）才有「挤在一起、要放大触摸目标」的问题。 */
+  .MuiDialog-root .MuiInputBase-input {
     padding: 10px 12px !important;
   }
 }
