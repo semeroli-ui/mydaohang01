@@ -35,7 +35,12 @@ import SortIcon from '@mui/icons-material/Sort';
 import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+
+// 卡片列宽：编辑态与只读态共用同一套。此前两处分别写死（md 一个 25%、一个 33.33%），
+// 导致点一下「编辑」整页重排、用户正在看的卡片会跳位。
+const CARD_WIDTH = { xs: '100%', sm: '50%', md: '33.33%', lg: '25%', xl: '20%' } as const;
+
 
 // 更新组件属性接口
 interface GroupCardProps {
@@ -154,15 +159,14 @@ const GroupCard: React.FC<GroupCardProps> = ({
   // 判断是否为当前正在编辑的分组
   const isCurrentEditingGroup = sortMode === 'SiteSort' && currentSortingGroupId === group.id;
 
+  // 排序模式下，非当前分组不再整体隐藏（会让人误以为数据丢失），改为淡出 + 禁用交互
+  const isDimmed = !isCurrentEditingGroup && sortMode === 'SiteSort';
+
+
   // 渲染站点卡片区域
   const renderSites = () => {
     // 使用本地状态中的站点数据
     const sitesToRender = isCurrentEditingGroup ? sites : group.sites;
-
-    // 如果当前不是正在编辑的分组且处于站点排序模式，不显示站点
-    if (!isCurrentEditingGroup && sortMode === 'SiteSort') {
-      return null;
-    }
 
     // 如果是编辑模式，使用DndContext包装
     if (isCurrentEditingGroup) {
@@ -188,13 +192,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
                   <Box
                     key={site.id || idx}
                     sx={{
-                      width: {
-                        xs: '50%',
-                        sm: '50%',
-                        md: '25%',
-                        lg: '25%',
-                        xl: '25%',
-                      },
+                      width: CARD_WIDTH,
                       padding: 1, // 内部间距，更均匀的分布
                       boxSizing: 'border-box', // 确保padding不影响宽度计算
                     }}
@@ -230,13 +228,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
           <Box
             key={site.id}
             sx={{
-              width: {
-                xs: '100%',
-                sm: '50%',
-                md: '33.33%',
-                lg: '25%',
-                xl: '20%',
-              },
+              width: CARD_WIDTH,
               padding: 1, // 内部间距，更均匀的分布
               boxSizing: 'border-box', // 确保padding不影响宽度计算
             }}
@@ -296,6 +288,9 @@ const GroupCard: React.FC<GroupCardProps> = ({
         p: { xs: 2, sm: 3 },
         transition: 'all 0.3s ease-in-out',
         border: '1px solid transparent',
+        // 排序时的非当前分组：淡出 + 禁止交互，但内容保留，避免用户误以为数据丢失
+        opacity: isDimmed ? 0.4 : 1,
+        pointerEvents: isDimmed ? 'none' : 'auto',
         '&:hover': {
           boxShadow: sortMode === 'None' ? 6 : 3,
           borderColor: 'divider',
@@ -318,7 +313,9 @@ const GroupCard: React.FC<GroupCardProps> = ({
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 1,
+            // 24px 图标按钮 + 4px 间距 = 28px，左移等量让标题文字与下方卡片左边缘落在同一条竖线上
+            ml: '-28px',
+            gap: 0.5,
             cursor: 'pointer',
             '&:hover': {
               '& .collapse-icon': {
@@ -331,12 +328,20 @@ const GroupCard: React.FC<GroupCardProps> = ({
           <IconButton
             size='small'
             className='collapse-icon'
-            sx={{
-              transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)',
-              transition: 'transform 0.3s ease-in-out',
-            }}
+            aria-label={isCollapsed ? `展开 ${group.name}` : `收起 ${group.name}`}
+            aria-expanded={!isCollapsed}
+            sx={{ width: 24, height: 24, p: 0 }}
           >
-            <ExpandMoreIcon />
+            {/* 按「方向」表达状态，而不是上下翻转：
+                收起时朝右「›」＝可以展开；展开时转 90° 朝下「⌄」＝内容在下方。
+                上下翻转是 MUI Accordion 的习惯做法，但展开态朝上在本页容易被读成"回到顶部"。 */}
+            <ChevronRightIcon
+              sx={{
+                fontSize: 20,
+                transform: isCollapsed ? 'none' : 'rotate(90deg)',
+                transition: 'transform 180ms ease-out',
+              }}
+            />
           </IconButton>
           <Typography
             variant='h5'

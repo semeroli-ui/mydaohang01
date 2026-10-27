@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="导航站">
+  <title>导航站</title>
+  <defs>
+    <linearGradient id="navGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#61DAFB" />
+      <stop offset="1" stop-color="#2D6CDF" />
+    </linearGradient>
+  </defs>
+  <!-- 六边形：沿用品牌六边形轮廓，去掉投影与装饰点，保证 16px 下只剩清晰轮廓 -->
+  <path d="M32 3.5 56.5 17.7v28.6L32 60.5 7.5 46.3V17.7z" fill="url(#navGrad)" />
+  <!-- 白色 N：单笔画粗线，缩小后仍可辨识 -->
+  <path d="M22 43V21l20 22V21" fill="none" stroke="#FFFFFF" stroke-width="6.5"
+        stroke-linecap="square" stroke-linejoin="miter" />
+</svg>

@@ -311,10 +311,22 @@ const SiteCard = memo(function SiteCard({
                     top: 8,
                     right: 8,
                     bgcolor: 'action.hover',
+                    // 按「设备有没有悬停能力」区分，而不是猜屏幕宽度：
+                    // 有鼠标的设备保持悬停才显示（免得常驻图标压住标题）；
+                    // 手机/平板没有 hover，改为常显，否则这个入口根本点不到。
                     opacity: 0,
-                    transition: 'opacity 0.2s',
+                    transition: 'opacity 180ms ease-out',
+                    '@media (hover: none)': { opacity: 0.35 },
                     '&:hover': {
                       bgcolor: 'action.selected',
+                      opacity: 1,
+                    },
+                    // 键盘 Tab 到它时同样要看得见，否则键盘用户不知道焦点在哪
+                    '&:focus-visible': {
+                      opacity: 1,
+                      outline: '2px solid',
+                      outlineColor: 'primary.main',
+                      outlineOffset: 2,
                     },
                     '.MuiCardActionArea-root:hover &': {
                       opacity: 1,
