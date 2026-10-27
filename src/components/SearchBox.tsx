@@ -29,6 +29,7 @@ import {
   Check as CheckIcon,
 } from '@mui/icons-material';
 import SearchResultPanel from './SearchResultPanel';
+import { RADIUS } from '../theme';
 import { searchInternal, type SearchResultItem } from '../utils/search';
 import {
   SEARCH_ENGINES,
@@ -240,16 +241,21 @@ const SearchBox: React.FC<SearchBoxProps> = ({ groups, sites, onInternalResultCl
         </ToggleButtonGroup>
 
         <Paper
-          elevation={2}
+          elevation={0}
           sx={{
             display: 'flex',
             alignItems: 'center',
             p: 0.5,
-            borderRadius: 3,
+            borderRadius: RADIUS.card,
+            boxShadow: 1,
+            // 卡片有 1px 描边，搜索框却没有 —— 深色模式下一片黑，看不出这是个输入框
+            border: '1px solid',
+            borderColor: 'divider',
             transition: 'all 0.3s',
             flex: 1,
             '&:focus-within': {
-              boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
+              // 焦点环用主题主色，同时把阴影抬一级（5 = 悬停档）
+              boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}, ${theme.shadows[5]}`,
             },
           }}
         >

@@ -11,6 +11,8 @@ import {
   Checkbox,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { alpha } from '@mui/material/styles';
+import { RADIUS } from '../theme';
 
 interface LoginFormProps {
   onLogin: (username: string, password: string, rememberMe: boolean) => void;
@@ -40,19 +42,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false, error =
       }}
     >
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
           p: { xs: 3, sm: 4 },
-          borderRadius: 2,
+          borderRadius: RADIUS.surface,
           width: '100%',
           maxWidth: { xs: '90%', sm: 400 },
-          backgroundColor: (theme) =>
-            theme.palette.mode === 'dark' ? 'rgba(33, 33, 33, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.9),
           backdropFilter: 'blur(10px)',
-          boxShadow: (theme) =>
-            theme.palette.mode === 'dark'
-              ? '0 8px 32px rgba(0, 0, 0, 0.3)'
-              : '0 8px 32px rgba(0, 0, 0, 0.1)',
+          // 5 = 主题里的「抬起一级」阴影；登录卡片是全屏唯一元素，给足存在感
+          boxShadow: 5,
         }}
       >
         <Box
@@ -68,12 +67,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false, error =
               mb: 2,
               width: 56,
               height: 56,
-              borderRadius: '50%',
+              borderRadius: RADIUS.pill,
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
               backgroundColor: 'primary.main',
-              color: 'white',
+              // 深色模式的主色是浅蓝，白图标会糊；用主题算好的对比色
+              color: 'primary.contrastText',
             }}
           >
             <LockOutlinedIcon fontSize='large' />
@@ -142,7 +142,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false, error =
               py: 1.5,
               mt: 2,
               mb: 2,
-              borderRadius: 2,
+              borderRadius: RADIUS.control,
             }}
           >
             {loading ? <CircularProgress size={24} color='inherit' /> : '登录'}

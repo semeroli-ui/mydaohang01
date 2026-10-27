@@ -1,3 +1,12 @@
-@import 'tailwindcss';
-
-@custom-variant dark (&:where(.dark, .dark *));
+/* 全局样式说明
+ *
+ * 这里原本是 `@import 'tailwindcss'`。Tailwind 在这个项目里从头到尾没有被使用
+ * （vite.config.ts 里连 @tailwindcss/vite 插件都没注册），但它仍然把
+ * preflight 重置（`*,::before,::after{box-sizing:border-box;margin:0}` 等）
+ * 打包进了产物，和 MUI 的 CssBaseline 两套重置互相覆盖 —— 
+ * 谁赢取决于样式表顺序，属于「改了这个坏了那个」的典型来源。现已整段移除。
+ *
+ * 全站样式只从两处来：
+ *   1. src/theme.ts —— 色板 / 圆角 / 阴影 / 字号（主题层，优先级最高，可被 sx 覆盖）
+ *   2. src/App.css  —— 拖拽、背景图、移动端适配这类 MUI 管不到的纯 CSS
+ */

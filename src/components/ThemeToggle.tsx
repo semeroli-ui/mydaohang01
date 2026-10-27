@@ -2,6 +2,7 @@
 import { IconButton, Tooltip } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { RADIUS } from '../theme';
 
 interface ThemeToggleProps {
   darkMode: boolean;
@@ -17,7 +18,7 @@ export default function ThemeToggle({ darkMode, onToggle }: ThemeToggleProps) {
         aria-label='切换主题'
         sx={{
           p: 1.5,
-          borderRadius: '50%',
+          borderRadius: RADIUS.pill,
           bgcolor: 'background.paper',
           boxShadow: 1,
           color: 'text.primary',

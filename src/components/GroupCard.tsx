@@ -36,11 +36,12 @@ import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { alpha } from '@mui/material/styles';
+import { RADIUS } from '../theme';
 
 // 卡片列宽：编辑态与只读态共用同一套。此前两处分别写死（md 一个 25%、一个 33.33%），
 // 导致点一下「编辑」整页重排、用户正在看的卡片会跳位。
 const CARD_WIDTH = { xs: '100%', sm: '50%', md: '33.33%', lg: '25%', xl: '20%' } as const;
-
 
 // 更新组件属性接口
 interface GroupCardProps {
@@ -162,7 +163,6 @@ const GroupCard: React.FC<GroupCardProps> = ({
   // 排序模式下，非当前分组不再整体隐藏（会让人误以为数据丢失），改为淡出 + 禁用交互
   const isDimmed = !isCurrentEditingGroup && sortMode === 'SiteSort';
 
-
   // 渲染站点卡片区域
   const renderSites = () => {
     // 使用本地状态中的站点数据
@@ -282,22 +282,23 @@ const GroupCard: React.FC<GroupCardProps> = ({
   // 修改分组标题区域的渲染
   return (
     <Paper
-      elevation={sortMode === 'None' ? 2 : 3}
+      elevation={0}
       sx={{
-        borderRadius: 4,
+        borderRadius: RADIUS.surface,
         p: { xs: 2, sm: 3 },
         transition: 'all 0.3s ease-in-out',
         border: '1px solid transparent',
+        // 1 / 5 是主题的三档阴影索引：静止 / 抬一级（见 src/theme.ts）
+        boxShadow: sortMode === 'None' ? 1 : 5,
         // 排序时的非当前分组：淡出 + 禁止交互，但内容保留，避免用户误以为数据丢失
         opacity: isDimmed ? 0.4 : 1,
         pointerEvents: isDimmed ? 'none' : 'auto',
         '&:hover': {
-          boxShadow: sortMode === 'None' ? 6 : 3,
+          boxShadow: 5,
           borderColor: 'divider',
           transform: sortMode === 'None' ? 'scale(1.01)' : 'none',
         },
-        backgroundColor: (theme) =>
-          theme.palette.mode === 'dark' ? 'rgba(33, 33, 33, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.95),
         backdropFilter: 'blur(5px)',
       }}
     >
@@ -346,7 +347,6 @@ const GroupCard: React.FC<GroupCardProps> = ({
           <Typography
             variant='h5'
             component='h2'
-            fontWeight='600'
             color='text.primary'
             sx={{ mb: { xs: 1, sm: 0 } }}
           >
@@ -374,10 +374,6 @@ const GroupCard: React.FC<GroupCardProps> = ({
               size='small'
               startIcon={<SaveIcon />}
               onClick={handleSaveSiteOrder}
-              sx={{
-                minWidth: 'auto',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              }}
             >
               保存顺序
             </Button>
@@ -392,10 +388,6 @@ const GroupCard: React.FC<GroupCardProps> = ({
                     size='small'
                     onClick={() => onAddSite(group.id)}
                     startIcon={<AddIcon />}
-                    sx={{
-                      minWidth: 'auto',
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    }}
                   >
                     添加卡片
                   </Button>
@@ -406,10 +398,6 @@ const GroupCard: React.FC<GroupCardProps> = ({
                   size='small'
                   startIcon={<SortIcon />}
                   onClick={handleSortClick}
-                  sx={{
-                    minWidth: 'auto',
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                  }}
                 >
                   排序
                 </Button>

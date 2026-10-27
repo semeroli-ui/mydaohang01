@@ -9,6 +9,7 @@ import LoginForm from './components/LoginForm';
 import SearchBox from './components/SearchBox';
 import { sanitizeCSS, isSecureUrl, extractDomain } from './utils/url';
 import { SearchResultItem } from './utils/search';
+import { createAppTheme, RADIUS, FONT_SIZE } from './theme';
 import './App.css';
 import {
   DndContext,
@@ -37,7 +38,6 @@ import {
   Alert,
   Stack,
   Paper,
-  createTheme,
   ThemeProvider,
   CssBaseline,
   TextField,
@@ -109,16 +109,8 @@ function App() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
-  // 创建Material UI主题
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode: darkMode ? 'dark' : 'light',
-        },
-      }),
-    [darkMode]
-  );
+  // 创建Material UI主题（色板 / 圆角 / 阴影 / 字号全部来自 src/theme.ts）
+  const theme = useMemo(() => createAppTheme(darkMode ? 'dark' : 'light'), [darkMode]);
 
   // 切换主题的回调函数
   const toggleTheme = () => {
@@ -914,14 +906,11 @@ function App() {
           onClose={() => setImportResultOpen(false)}
           severity='success'
           variant='filled'
+          // 深色模式下的绿色此前是手写 #2e7d32 + 白字，和主题的 success 色板打架。
+          // 现在统一由 theme.ts 的 palette.success 决定（深色用浅绿底 + 深色字）。
           sx={{
             width: '100%',
             whiteSpace: 'pre-line',
-            backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#2e7d32' : undefined),
-            color: (theme) => (theme.palette.mode === 'dark' ? '#fff' : undefined),
-            '& .MuiAlert-icon': {
-              color: (theme) => (theme.palette.mode === 'dark' ? '#fff' : undefined),
-            },
           }}
         >
           {importResultMessage}
@@ -998,7 +987,8 @@ function App() {
               fontWeight='bold'
               color='text.primary'
               sx={{
-                fontSize: { xs: '1.75rem', sm: '2.125rem', md: '3rem' },
+                // 字号来自主题的标题刻度（32px），窄屏逐级降档
+                fontSize: { xs: 26, sm: 28, md: FONT_SIZE.title },
                 textAlign: { xs: 'center', sm: 'left' },
               }}
             >
@@ -1022,10 +1012,6 @@ function App() {
                       startIcon={<SaveIcon />}
                       onClick={handleSaveGroupOrder}
                       size='small'
-                      sx={{
-                        minWidth: 'auto',
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      }}
                     >
                       保存分组顺序
                     </Button>
@@ -1036,10 +1022,6 @@ function App() {
                     startIcon={<CancelIcon />}
                     onClick={cancelSort}
                     size='small'
-                    sx={{
-                      minWidth: 'auto',
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    }}
                   >
                     取消编辑
                   </Button>
@@ -1053,10 +1035,6 @@ function App() {
                       color='primary'
                       onClick={() => setIsAuthRequired(true)}
                       size='small'
-                      sx={{
-                        minWidth: 'auto',
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      }}
                     >
                       管理员登录
                     </Button>
@@ -1069,10 +1047,6 @@ function App() {
                         startIcon={<AddIcon />}
                         onClick={handleOpenAddGroup}
                         size='small'
-                        sx={{
-                          minWidth: 'auto',
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        }}
                       >
                         新增分组
                       </Button>
@@ -1086,10 +1060,6 @@ function App() {
                         aria-haspopup='true'
                         aria-expanded={openMenu ? 'true' : undefined}
                         size='small'
-                        sx={{
-                          minWidth: 'auto',
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        }}
                       >
                         更多选项
                       </Button>
@@ -1788,12 +1758,12 @@ function App() {
               href='https://github.com/zqq-nuli/Navihive'
               target='_blank'
               rel='noopener noreferrer'
-              elevation={2}
+              elevation={1}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 p: 1,
-                borderRadius: 10,
+                borderRadius: RADIUS.pill,
                 bgcolor: 'background.paper',
                 color: 'text.secondary',
                 transition: 'all 0.3s ease-in-out',

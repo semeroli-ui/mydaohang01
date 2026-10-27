@@ -20,7 +20,6 @@ import {
   Stack,
   Divider,
   Avatar,
-  useTheme,
   SelectChangeEvent,
   InputAdornment,
   Alert,
@@ -28,6 +27,8 @@ import {
   Switch,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { alpha } from '@mui/material/styles';
+import { RADIUS } from '../theme';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -50,8 +51,6 @@ export default function SiteSettingsModal({
   groups = [],
   iconApi = 'https://www.faviconextractor.com/favicon/{domain}?larger=true',
 }: SiteSettingsModalProps) {
-  const theme = useTheme();
-
   // 存储字符串形式的group_id，与Material-UI的Select兼容
   const [formData, setFormData] = useState({
     name: site.name,
@@ -160,18 +159,7 @@ export default function SiteSettingsModal({
   const fallbackIcon = formData.name?.charAt(0).toUpperCase() || 'A';
 
   return (
-    <Dialog
-      open={true}
-      onClose={onClose}
-      fullWidth
-      maxWidth='sm'
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          backgroundColor: theme.palette.background.paper,
-        },
-      }}
-    >
+    <Dialog open={true} onClose={onClose} fullWidth maxWidth='sm'>
       <DialogTitle
         sx={{
           display: 'flex',
@@ -240,7 +228,7 @@ export default function SiteSettingsModal({
                   <Avatar
                     src={iconPreview}
                     alt={formData.name || 'Icon Preview'}
-                    sx={{ width: 40, height: 40, borderRadius: 1.5 }}
+                    sx={{ width: 40, height: 40, borderRadius: RADIUS.control }}
                     imgProps={{
                       onError: handleIconError,
                       style: { objectFit: 'cover' },
@@ -252,11 +240,11 @@ export default function SiteSettingsModal({
                     sx={{
                       width: 40,
                       height: 40,
-                      borderRadius: 1.5,
-                      bgcolor: 'primary.light',
+                      borderRadius: RADIUS.control,
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
                       color: 'primary.main',
                       border: '1px solid',
-                      borderColor: 'primary.main',
+                      borderColor: (theme) => alpha(theme.palette.primary.main, 0.22),
                     }}
                     variant='rounded'
                   >

@@ -16,7 +16,9 @@ import {
   Divider,
 } from '@mui/material';
 import { Language as LanguageIcon, Folder as FolderIcon } from '@mui/icons-material';
+import { alpha } from '@mui/material/styles';
 import type { SearchResultItem } from '../utils/search';
+import { RADIUS } from '../theme';
 
 interface SearchResultPanelProps {
   results: SearchResultItem[];
@@ -80,7 +82,7 @@ const SearchResultPanel: React.FC<SearchResultPanelProps> = ({
         maxHeight: '400px',
         overflowY: 'auto',
         zIndex: 1300,
-        borderRadius: 2,
+        borderRadius: RADIUS.card,
       }}
     >
       <List sx={{ py: 0 }}>
@@ -106,8 +108,13 @@ const SearchResultPanel: React.FC<SearchResultPanelProps> = ({
                       justifyContent: 'center',
                       width: 40,
                       height: 40,
-                      borderRadius: 1,
-                      bgcolor: result.type === 'site' ? 'primary.light' : 'secondary.light',
+                      borderRadius: RADIUS.control,
+                      // 同 SiteCard：深色下 primary.light 更亮，浅底深字会糊成一片
+                      bgcolor: (theme) => {
+                        const c =
+                          result.type === 'site' ? theme.palette.primary : theme.palette.secondary;
+                        return alpha(c.main, 0.12);
+                      },
                       color: result.type === 'site' ? 'primary.main' : 'secondary.main',
                     }}
                   >

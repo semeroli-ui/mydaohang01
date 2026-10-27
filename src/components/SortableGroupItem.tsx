@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GroupWithSites } from '../types';
 import { Paper, Typography, Box } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { RADIUS } from '../theme';
 
 interface SortableGroupItemProps {
   id: string;
@@ -27,15 +28,16 @@ export default function SortableGroupItem({ id, group }: SortableGroupItemProps)
       style={style}
       sx={{
         p: 3,
-        borderRadius: 4,
+        borderRadius: RADIUS.surface,
         transition: isDragging ? 'none !important' : 'all 0.3s ease-in-out',
         border: '1px solid transparent',
-        boxShadow: isDragging ? 8 : 2,
+        // 三档阴影索引：静止 1 / 悬停 5 / 拖拽中 8（见 src/theme.ts）
+        boxShadow: isDragging ? 8 : 1,
         cursor: 'grab',
         '&:active': { cursor: 'grabbing' },
         '&:hover': {
           borderColor: 'divider',
-          boxShadow: 6,
+          boxShadow: 5,
         },
         ...(isDragging && {
           outline: '2px solid',
@@ -64,7 +66,7 @@ export default function SortableGroupItem({ id, group }: SortableGroupItemProps)
             opacity: 0.7,
           }}
         />
-        <Typography variant='h5' component='h2' fontWeight='600' color='text.primary'>
+        <Typography variant='h5' component='h2' color='text.primary'>
           {group.name}
         </Typography>
       </Box>

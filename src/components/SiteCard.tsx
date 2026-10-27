@@ -17,6 +17,8 @@ import {
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { alpha } from '@mui/material/styles';
+import { RADIUS, FONT_SIZE } from '../theme';
 
 interface SiteCardProps {
   site: Site;
@@ -107,19 +109,21 @@ const SiteCard = memo(function SiteCard({
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: 3,
+          borderRadius: RADIUS.card,
           transition: 'box-shadow 0.3s ease-in-out',
           border: '1px solid',
           borderColor: 'divider',
-          boxShadow: isDragging ? 8 : 2,
+          // 1 / 5 / 8 是主题里的三档阴影索引（见 src/theme.ts 的 buildShadows）：
+          // 静止 → 悬停 → 拖拽中。不要写具体的 box-shadow 字符串。
+          boxShadow: isDragging ? 8 : 1,
           '&:hover': !isEditMode
             ? {
                 boxShadow: 5,
               }
             : {},
           overflow: 'hidden',
-          backgroundColor: (theme) =>
-            theme.palette.mode === 'dark' ? 'rgba(33, 33, 33, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          // 留一点透明度，让「网站设置」里的背景图能透上来；颜色本身取自主题
+          backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.9),
           backdropFilter: 'blur(5px)',
         }}
       >
@@ -157,7 +161,7 @@ const SiteCard = memo(function SiteCard({
                       sx={{
                         width: 32,
                         height: 32,
-                        borderRadius: 1,
+                        borderRadius: RADIUS.control,
                         objectFit: 'cover',
                       }}
                       onError={handleIconError}
@@ -171,15 +175,16 @@ const SiteCard = memo(function SiteCard({
                     width: 32,
                     height: 32,
                     mr: 1.5,
-                    borderRadius: 1,
-                    bgcolor: 'primary.light',
+                    borderRadius: RADIUS.control,
+                    // 深色模式下 primary.light 比 primary.main 更亮，套上「浅底深字」会变成
+                    // 浅蓝底 + 浅蓝字，首字母几乎看不见。改成主色的半透明底 + 主色字，两种模式都成立。
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
                     color: 'primary.main',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: 1,
-                    borderColor: 'primary.main',
-                    opacity: 0.8,
+                    border: '1px solid',
+                    borderColor: (theme) => alpha(theme.palette.primary.main, 0.22),
                   }}
                 >
                   {fallbackIcon}
@@ -187,10 +192,10 @@ const SiteCard = memo(function SiteCard({
               )}
               <Typography
                 variant='subtitle1'
-                fontWeight='medium'
                 noWrap
                 sx={{
-                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  // 主题正文档 15px；窄屏退到 14px，免得长站名挤成两行
+                  fontSize: { xs: 14, sm: FONT_SIZE.body },
                 }}
               >
                 {site.name}
@@ -207,7 +212,7 @@ const SiteCard = memo(function SiteCard({
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
                 flexGrow: 1,
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                fontSize: { xs: 12, sm: FONT_SIZE.caption },
               }}
             >
               {site.description || '暂无描述'}
@@ -246,7 +251,7 @@ const SiteCard = memo(function SiteCard({
                         sx={{
                           width: 32,
                           height: 32,
-                          borderRadius: 1,
+                          borderRadius: RADIUS.control,
                           objectFit: 'cover',
                         }}
                         onError={handleIconError}
@@ -260,15 +265,14 @@ const SiteCard = memo(function SiteCard({
                       width: 32,
                       height: 32,
                       mr: 1.5,
-                      borderRadius: 1,
-                      bgcolor: 'primary.light',
+                      borderRadius: RADIUS.control,
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
                       color: 'primary.main',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      border: 1,
-                      borderColor: 'primary.main',
-                      opacity: 0.8,
+                      border: '1px solid',
+                      borderColor: (theme) => alpha(theme.palette.primary.main, 0.22),
                     }}
                   >
                     {fallbackIcon}
@@ -276,10 +280,9 @@ const SiteCard = memo(function SiteCard({
                 )}
                 <Typography
                   variant='subtitle1'
-                  fontWeight='medium'
                   noWrap
                   sx={{
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    fontSize: { xs: 14, sm: FONT_SIZE.body },
                   }}
                 >
                   {site.name}
@@ -296,7 +299,7 @@ const SiteCard = memo(function SiteCard({
                   WebkitBoxOrient: 'vertical',
                   overflow: 'hidden',
                   flexGrow: 1,
-                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  fontSize: { xs: 12, sm: FONT_SIZE.caption },
                 }}
               >
                 {site.description || '暂无描述'}
